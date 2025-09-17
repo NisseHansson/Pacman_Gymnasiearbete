@@ -638,3 +638,4 @@ namespace Maze
     }
 
 
+// Något coolt
