@@ -35,17 +35,33 @@ namespace Maze
         // i labyrinten och vi kan ladda om den när Pacman har ätit alla prickar
         int[,] maze1 =
         {
+
+
+            {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+            {0,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,0},
+            {0,1,2,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,2,1,0},
+            {0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0},
+            {0,1,2,1,1,2,1,2,1,1,1,1,1,2,1,2,1,1,2,1,0},
+            {0,1,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,2,1,0},
+            {0,1,1,1,1,2,1,1,1,0,1,0,1,1,1,2,1,1,1,1,0},
+            {0,0,0,0,1,2,1,0,0,0,4,0,0,0,1,2,1,0,0,0,0},
+            {1,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,1},
+            {0,0,0,0,0,2,0,0,1,0,0,0,1,0,0,2,0,0,0,0,0},
+            {1,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,1},
+            {0,0,0,0,1,2,1,0,0,0,0,0,0,0,1,2,1,0,0,0,0},
+            {0,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,0},
+            {0,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,0},
+            {0,1,2,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,2,1,0},
+            {0,1,2,2,1,2,2,2,2,2,3,2,2,2,2,2,1,2,2,1,0},
+            {0,1,1,2,1,2,1,2,1,1,1,1,1,2,1,2,1,2,1,1,0},
+            {0,1,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,2,1,0},
+            {0,1,2,1,1,1,1,1,1,2,1,2,1,1,1,1,1,1,2,1,0},
+            {0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0},
+            {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+            
+
+
             /*
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, // 1
-            {1, 2, 2, 2, 2, 4, 2, 2, 2, 2, 1 }, // 2
-            {1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1 }, // 3
-            {1, 2, 1, 2, 2, 2, 2, 2, 1, 2, 1 }, // 4
-            {1, 2, 2, 2, 1, 1, 1, 2, 2, 2, 1 }, // 5
-            {1, 2, 1, 2, 2, 2, 2, 2, 1, 2, 1 }, // 4
-            {1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1 }, // 3
-            {1, 2, 2, 2, 2, 3, 2, 2, 2, 2, 1 }, // 2
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }  // 1
-            */
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
             {1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1},
             {1, 2, 1, 4, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1},
@@ -63,6 +79,7 @@ namespace Maze
             {1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1},
             {1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1},
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+            */
         };
 
         // Det här kommer att vara kopian på labyrinten och det är i denna
@@ -405,97 +422,7 @@ namespace Maze
                 // Spara undan spökets nuvarande position
                 int oldX = ghosts[i].X;
                 int oldY = ghosts[i].Y;
-                /*
-                if (WallHit)
-                {
-                    if (Math.Abs(manX - ghosts[i].X) < Math.Abs(manY - ghosts[i].Y))
-                    {
-                        if (manY - ghosts[i].Y < 0)
-                        {
-                            ghosts[i].Y--;
-                            ghosts[i].Direction = _up;
-                        }
-                        else
-                        {
-                            ghosts[i].Y++;
-                            ghosts[i].Direction = _down;
-                        }
-                        if (maze[ghosts[i].Y, ghosts[i].X] == _wall ||
-                            maze[ghosts[i].Y, ghosts[i].X] == _ghost)
-                        {
 
-
-                            if (manX - ghosts[i].X < 0)
-                            {
-
-                                ghosts[i].Direction = _left;
-                            }
-                            else
-                            {
-
-                                ghosts[i].Direction = _right;
-                            }
-                        }
-
-                    }
-                    else
-                    {
-                        if (manX - ghosts[i].X < 0)
-                        {
-                            ghosts[i].X--;
-                            ghosts[i].Direction = _left;
-                        }
-                        else
-                        {
-                            ghosts[i].X++;
-                            ghosts[i].Direction = _right;
-                        }
-                        if (maze[ghosts[i].Y, ghosts[i].X] == _wall ||
-                            maze[ghosts[i].Y, ghosts[i].X] == _ghost)
-                        {
-
-                            if (manY - ghosts[i].Y < 0)
-                            {
-
-                                ghosts[i].Direction = _up;
-                            }
-                            else
-                            {
-
-                                ghosts[i].Direction = _down;
-                            }
-
-
-                        }
-                        ghosts[i].X = oldX;
-                        ghosts[i].Y = oldY;
-                        WallHit = false;
-                    }
-                    if (ghosts[i].Direction == _right)
-                    {
-                        ghosts[i].X++;
-                    }
-
-                    if (ghosts[i].Direction == _down)
-                    {
-                        ghosts[i].Y++;
-                    }
-
-                    if (ghosts[i].Direction == _left)
-                    {
-                        ghosts[i].X--;
-                    }
-
-                    if (ghosts[i].Direction == _up)
-                    {
-                        ghosts[i].Y--;
-                    }
-                    if (maze[ghosts[i].Y, ghosts[i].X] == _wall ||
-                       maze[ghosts[i].Y, ghosts[i].X] == _ghost)
-                    {
-                        WallHit = true;
-                    }
-                */
 
                 if (Math.Abs(manX - ghosts[i].X) < Math.Abs(manY - ghosts[i].Y))
                 {
@@ -558,31 +485,6 @@ namespace Maze
                         }
                     }
                 }
-
-
-                // Kolla igenom vilken riktning spöket är på väg och 
-                // förflytta det enligt riktningen
-                /*
-                if (ghosts[i].Direction == _right)
-                {
-                    ghosts[i].X++;
-                }
-
-                if (ghosts[i].Direction == _down)
-                {
-                    ghosts[i].Y++;
-                }
-
-                if (ghosts[i].Direction == _left)
-                {
-                    ghosts[i].X--;
-                }
-
-                if (ghosts[i].Direction == _up)
-                {
-                    ghosts[i].Y--;
-                }
-                */
                 // Har spöket gått in i något som det inte ska kunna passera
                 // igenom? Just nu kollar vi efter väggar och andra spöken
 
