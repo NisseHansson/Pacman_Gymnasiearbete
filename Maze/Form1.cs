@@ -2,6 +2,7 @@ namespace Maze
 {
     public partial class Form1 : Form
     {
+        
         // Vad betyder de olika siffrorna i labyrinten?
         // Istället för att använda "magic numbers" så definierar vi upp
         // dem med namn så att koden blir mer lättläst och lättjobbad.
@@ -18,6 +19,7 @@ namespace Maze
         const int _left = 2;
         const int _up = 3;
         const int _lastDir = 4;
+
 
         // Istället för att skriva .GetLength(0) så kan vi enklare se
         // vilken dimension vi vill komma åt
@@ -58,28 +60,6 @@ namespace Maze
             {0,1,2,1,1,1,1,1,1,2,1,2,1,1,1,1,1,1,2,1,0},
             {0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0},
             {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-            
-
-
-            /*
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1},
-            {1, 2, 1, 4, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1},
-            {1, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 1},
-            {1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1},
-            {1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1},
-            {1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1},
-            {1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1},
-            {1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1},
-            {1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1},
-            {1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1},
-            {1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1},
-            {1, 2, 1, 1, 1, 2, 1, 2, 1, 3, 1, 2, 1, 2, 1, 1, 1, 2, 1},
-            {1, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 1},
-            {1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1},
-            {1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-            */
         };
 
         // Det här kommer att vara kopian på labyrinten och det är i denna
@@ -99,6 +79,8 @@ namespace Maze
         int manDirection = _noMove;
         bool manAlive = true;
 
+        int nextDirection = _noMove;
+
         int score = 0;
 
         // Hur många prickar finns i nuvarande labyrint? När denna når noll
@@ -115,6 +97,9 @@ namespace Maze
 
             // När vi startar spelet vill vi dra igång en ny labyrint
             InitMaze();
+
+            // Gömmer knappen för att starta om spelet
+            ResetButton.Hide();
         }
 
         // Här skapar vi en kopia av labyrint-datan och lägger till saker som
@@ -313,6 +298,17 @@ namespace Maze
             {
                 manDirection = _right;
             }
+            if (manAlive != true)
+            {
+                if (e.KeyCode == Keys.R)
+                {
+                    score = 0;
+                    this.Text = $"Score: {score}";
+                    InitMaze();
+                    manAlive = true;
+
+                }
+            }
         }
 
         // Om spelaren släpper upp en tangent så stannar Pacman
@@ -406,7 +402,12 @@ namespace Maze
             // Sätt ut Pacman på sin nya position
             maze[manY, manX] = _man;
         }
+        // Om Pacman är död så kör vi inte mer av metoden
+        private void ManDead(object sender, KeyEventArgs e)
+        {
 
+
+        }
         // Denna metod körs varje gång vår timer räknat ner till 0.
         // Efter att metoden har körts, börjar timern att räkna ner på nytt
         // Allt som har med spelet att göra styrs av denna metod och
@@ -507,37 +508,43 @@ namespace Maze
                     }
                     */
                 }
-                
 
-                    // Om vi gått på Pacman, ska han dö
-                    if (maze[ghosts[i].Y, ghosts[i].X] == _man)
-                    {
-                        maze[manY, manX] = _empty;
-                        maze[oldY, oldX] = _empty;
 
-                        manAlive = false;
-                    }
+                // Om vi gått på Pacman, ska han dö
+                if (maze[ghosts[i].Y, ghosts[i].X] == _man)
+                {
+                    maze[manY, manX] = _empty;
+                    maze[oldY, oldX] = _empty;
 
-                    // Vi lägger tillbaka det som låg på spökets gamla position
-                    // Detta görs för att saker som prickar inte ska försvinna nr
-                    // spökena passerar över
-                    maze[oldY, oldX] = ghosts[i].Leave;
-
-                    // Kom ihåg vad som låg på den position spöket hamnar på
-                    // Det kommer att läggas tillbaka nästa gång metoden körs
-                    ghosts[i].Leave = maze[ghosts[i].Y, ghosts[i].X];
-
-                    // Lägg in spöket på dess nya position
-                    maze[ghosts[i].Y, ghosts[i].X] = _ghost;
+                    manAlive = false;
                 }
 
-                // Allt som har med spelet att göras är uppdaterat så det är
-                // dags att rita om allt
-                Invalidate(true);
+                // Vi lägger tillbaka det som låg på spökets gamla position
+                // Detta görs för att saker som prickar inte ska försvinna nr
+                // spökena passerar över
+                maze[oldY, oldX] = ghosts[i].Leave;
 
+                // Kom ihåg vad som låg på den position spöket hamnar på
+                // Det kommer att läggas tillbaka nästa gång metoden körs
+                ghosts[i].Leave = maze[ghosts[i].Y, ghosts[i].X];
+
+                // Lägg in spöket på dess nya position
+                maze[ghosts[i].Y, ghosts[i].X] = _ghost;
             }
-        }
-    }
 
+            // Allt som har med spelet att göras är uppdaterat så det är
+            // dags att rita om allt
+            Invalidate(true);
+
+
+        }
+
+        private void ResetButton_Click(object sender, EventArgs e)
+        {
+            
+        }
+        
+    }
+}
 
 // Något coolt
