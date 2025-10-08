@@ -161,7 +161,7 @@ namespace Maze
 
                         // Spöket ska lämna en prick efter sig när det rör sig
                         // för första gången
-                        ghost.Leave = _dot;
+                        ghost.Leave = _empty;
 
                         // I vilken riktning ska spöket börja röra sig
                         ghost.Direction = _right;
@@ -171,7 +171,7 @@ namespace Maze
 
                         // Eftersom spöket lämnar en prick efter sig måste vi
                         // räkna upp antal prickar
-                        numDots++;
+                        
                     }
 
                     // Om det är en prick så ökar vi på antalet prickar vi funnit
