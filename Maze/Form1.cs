@@ -2,7 +2,7 @@ namespace Maze
 {
     public partial class Form1 : Form
     {
-        
+
         // Vad betyder de olika siffrorna i labyrinten?
         // Istället för att använda "magic numbers" så definierar vi upp
         // dem med namn så att koden blir mer lättläst och lättjobbad.
@@ -171,7 +171,7 @@ namespace Maze
 
                         // Eftersom spöket lämnar en prick efter sig måste vi
                         // räkna upp antal prickar
-                        
+
                     }
 
                     // Om det är en prick så ökar vi på antalet prickar vi funnit
@@ -381,6 +381,7 @@ namespace Maze
                     return;
                 }
             }
+            // Teleportering
             if (maze[manY, manX] == 5)
             {
                 manX = 19;
@@ -392,8 +393,8 @@ namespace Maze
                 manY = 9;
             }
 
-                // Har Pacman gått in i ett spöke så dör han
-                if (maze[manY, manX] == _ghost)
+            // Har Pacman gått in i ett spöke så dör han
+            if (maze[manY, manX] == _ghost)
             {
                 // Ta bort Pacman
                 maze[manY, manX] = _empty;
@@ -427,6 +428,9 @@ namespace Maze
             // Flytta på Pacman
             MoveMan();
 
+            int width = maze.GetLength(xLength);
+            int height = maze.GetLength(yLength);
+
             // Gå igenom alla spöken som finns i ghosts-listan
             for (int i = 0; i < ghosts.Count; i++)
             {
@@ -434,126 +438,132 @@ namespace Maze
                 int oldX = ghosts[i].X;
                 int oldY = ghosts[i].Y;
 
+                int gx = oldX;
+                int gy = oldY;
 
-                if (Math.Abs(manX - ghosts[i].X) < Math.Abs(manY - ghosts[i].Y))
+                int dx = manX - gx;
+                int dy = manY - gy;
+
+                // Lokal funktion för att kontrollera om en ruta går att flytta in i
+                bool IsPassable(int x, int y)
                 {
-                    if (manY - ghosts[i].Y < 0)
-                    {
-                        ghosts[i].Y--;
-                        ghosts[i].Direction = _up;
-                    }
-                    else
-                    {
-                        ghosts[i].Y++;
-                        ghosts[i].Direction = _down;
+                    if (x < 0 || y < 0 || x >= width || y >= height)
+                        return false;
+                    int v = maze[y, x];
+                    // Tillåt att gå på allt utom väggar och andra spöken.
+                    return v != _wall && v != _ghost;
+                }
+                List<int> candidates = new();
 
-                    }
-
-                    if (maze[ghosts[i].Y, ghosts[i].X] == _wall ||
-                        maze[ghosts[i].Y, ghosts[i].X] == _ghost)
-                    {
-                        ghosts[i].X = oldX;
-                        ghosts[i].Y = oldY;
-                        if (manX - ghosts[i].X < 0)
-                        {
-                            ghosts[i].X--;
-                            ghosts[i].Direction = _left;
-                        }
-                        else
-                        {
-                            ghosts[i].X++;
-                            ghosts[i].Direction = _right;
-                        }
-                    }
+                if (Math.Abs(dx) >= Math.Abs(dy))
+                {
+                    if (dx < 0) candidates.Add(_left); else if (dx > 0) candidates.Add(_right);
+                    if (dy < 0) candidates.Add(_up); else if (dy > 0) candidates.Add(_down);
                 }
                 else
                 {
-                    if (manX - ghosts[i].X < 0)
-                    {
-                        ghosts[i].X--;
-                        ghosts[i].Direction = _left;
-                    }
-                    else
-                    {
-                        ghosts[i].X++;
-                        ghosts[i].Direction = _right;
-                    }
-                    if (maze[ghosts[i].Y, ghosts[i].X] == _wall ||
-                    maze[ghosts[i].Y, ghosts[i].X] == _ghost)
-                    {
-                        ghosts[i].X = oldX;
-                        ghosts[i].Y = oldY;
-                        if (manY - ghosts[i].Y < 0)
-                        {
-                            ghosts[i].Y--;
-                            ghosts[i].Direction = _up;
-
-                        }
-                        else
-                        {
-                            ghosts[i].Y++;
-                            ghosts[i].Direction = _down;
-                        }
-                    }
+                    if (dy < 0) candidates.Add(_up); else if (dy > 0) candidates.Add(_down);
+                    if (dx < 0) candidates.Add(_left); else if (dx > 0) candidates.Add(_right);
                 }
-                // Har spöket gått in i något som det inte ska kunna passera
-                // igenom? Just nu kollar vi efter väggar och andra spöken
 
-                if (maze[ghosts[i].Y, ghosts[i].X] == _wall ||
-                    maze[ghosts[i].Y, ghosts[i].X] == _ghost)
+                // Lägg till övriga riktningar som fallback (samma ordning varje gång)
+                foreach (var d in new[] { _up, _down, _left, _right })
                 {
-                    // Flytta tillbaka spöket dit där det stod i början av
-                    // loopen
-                    ghosts[i].X = oldX;
-                    ghosts[i].Y = oldY;
-                    /*
-                    // Sväng åt höger
-                    ghosts[i].Direction++;
-
-                    // Om vi är på väg uppåt och svänger höger, så
-                    // ska vi börja om med riktningen höger
-                    if (ghosts[i].Direction >= _lastDir)
-                    {
-                        ghosts[i].Direction = _right;
-                    }
-                    */
+                    if (!candidates.Contains(d)) candidates.Add(d);
                 }
 
-
-                // Om vi gått på Pacman, ska han dö
-                if (maze[ghosts[i].Y, ghosts[i].X] == _man)
+                // Flytta reverse (vändning) till sist så den bara används om inget annat fungerar
+                int reverse = ghosts[i].Direction switch
                 {
-                    maze[manY, manX] = _empty;
-                    maze[oldY, oldX] = _empty;
-
-                    manAlive = false;
+                    _up => _down,
+                    _down => _up,
+                    _left => _right,
+                    _right => _left,
+                    _ => _noMove
+                };
+                if (reverse != _noMove && candidates.Contains(reverse))
+                {
+                    candidates.Remove(reverse);
+                    candidates.Add(reverse);
                 }
 
-                // Vi lägger tillbaka det som låg på spökets gamla position
-                // Detta görs för att saker som prickar inte ska försvinna nr
-                // spökena passerar över
+                // Försök alla kandidatriktningar i ordning tills en passar
+                bool moved = false;
+                foreach (int dir in candidates)
+                {
+                    int tx = gx, ty = gy;
+                    if (dir == _left) tx--;
+                    else if (dir == _right) tx++;
+                    else if (dir == _up) ty--;
+                    else if (dir == _down) ty++;
+
+                    // Kontrollera bounds först, sedan om rutan är passabel eller har Pacman
+                    if (tx < 0 || ty < 0 || tx >= width || ty >= height) continue;
+                    int tile = maze[ty, tx];
+                    if (tile == _man || IsPassable(tx, ty))
+                    {
+                        gx = tx;
+                        gy = ty;
+                        ghosts[i].Direction = dir;
+                        moved = true;
+                        break;
+                    }
+                }
+
+                int landed = maze[gy, gx];
+                if (landed == 5)
+                {
+                    gx = 19;
+                    gy = 9;
+                }
+                else if (landed == 6)
+                {
+                    gx = 1;
+                    gy = 9;
+                }
+
+
+                if (!moved)
+                {
+                    // Inget valbart drag -> stanna kvar
+                    gx = oldX;
+                    gy = oldY;
+                }
+
+                // Lägg tillbaka det som låg på spökets gamla position (så prickar återställs)
                 maze[oldY, oldX] = ghosts[i].Leave;
 
+                // Om spöket hamnar på Pacman -> Pacman dör
+                if (maze[gy, gx] == _man)
+                {
+                    manAlive = false;
+                    // Ta bort Pacman från spelplanen
+                    maze[manY, manX] = _empty;
+                }
+
                 // Kom ihåg vad som låg på den position spöket hamnar på
-                // Det kommer att läggas tillbaka nästa gång metoden körs
-                ghosts[i].Leave = maze[ghosts[i].Y, ghosts[i].X];
+                ghosts[i].Leave = maze[gy, gx];
+
+                // Uppdatera spökets position
+                ghosts[i].X = gx;
+                ghosts[i].Y = gy;
 
                 // Lägg in spöket på dess nya position
-                maze[ghosts[i].Y, ghosts[i].X] = _ghost;
+                maze[gy, gx] = _ghost;
             }
 
             // Allt som har med spelet att göras är uppdaterat så det är
             // dags att rita om allt
             Invalidate(true);
-
-
         }
+        // Bygg en ordnad lista med riktningar att pr
+
 
         private void ResetButton_Click(object sender, EventArgs e)
         {
-            
+
         }
-        
+
     }
 }
 
