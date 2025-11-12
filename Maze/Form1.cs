@@ -11,6 +11,8 @@ namespace Maze
         const int _dot = 2;
         const int _man = 3;
         const int _ghost = 4;
+        const int _teleportLeft = 5;
+        const int _teleportRight = 6;
 
         // Vilka riktningar motsvarar varje siffra?
         const int _noMove = -1;
@@ -18,8 +20,6 @@ namespace Maze
         const int _down = 1;
         const int _left = 2;
         const int _up = 3;
-        const int _lastDir = 4;
-
 
         // Istället för att skriva .GetLength(0) så kan vi enklare se
         // vilken dimension vi vill komma åt
@@ -37,8 +37,6 @@ namespace Maze
         // i labyrinten och vi kan ladda om den när Pacman har ätit alla prickar
         int[,] maze1 =
         {
-
-
             {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
             {0,1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,0},
             {0,1,2,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,2,1,0},
@@ -71,15 +69,11 @@ namespace Maze
         // spöke på ett och samma plats.
         List<Ghost> ghosts = new();
 
-        bool WallHit = true;
-
         // Allt som behövs för vår Pacman
         int manX = 0;
         int manY = 0;
         int manDirection = _noMove;
         bool manAlive = true;
-
-        int nextDirection = _noMove;
 
         int score = 0;
 
@@ -98,8 +92,6 @@ namespace Maze
             // När vi startar spelet vill vi dra igång en ny labyrint
             InitMaze();
 
-            // Gömmer knappen för att starta om spelet
-            ResetButton.Hide();
         }
 
         // Här skapar vi en kopia av labyrint-datan och lägger till saker som
@@ -382,12 +374,12 @@ namespace Maze
                 }
             }
             // Teleportering
-            if (maze[manY, manX] == 5)
+            if (maze[manY, manX] == _teleportLeft)
             {
                 manX = 19;
                 manY = 9;
             }
-            if (maze[manY, manX] == 6)
+            if (maze[manY, manX] == _teleportRight)
             {
                 manX = 1;
                 manY = 9;
@@ -412,12 +404,6 @@ namespace Maze
 
             // Sätt ut Pacman på sin nya position
             maze[manY, manX] = _man;
-        }
-        // Om Pacman är död så kör vi inte mer av metoden
-        private void ManDead(object sender, KeyEventArgs e)
-        {
-
-
         }
         // Denna metod körs varje gång vår timer räknat ner till 0.
         // Efter att metoden har körts, börjar timern att räkna ner på nytt
@@ -556,14 +542,6 @@ namespace Maze
             // dags att rita om allt
             Invalidate(true);
         }
-        // Bygg en ordnad lista med riktningar att pr
-
-
-        private void ResetButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
     }
 }
 

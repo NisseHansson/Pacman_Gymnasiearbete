@@ -31,7 +31,6 @@
             components = new System.ComponentModel.Container();
             timer1 = new System.Windows.Forms.Timer(components);
             timer2 = new System.Windows.Forms.Timer(components);
-            ResetButton = new Button();
             SuspendLayout();
             // 
             // timer1
@@ -39,16 +38,7 @@
             timer1.Enabled = true;
             timer1.Interval = 300;
             timer1.Tick += timer1_Tick;
-            // 
-            // ResetButton
-            // 
-            ResetButton.Location = new Point(308, 188);
-            ResetButton.Name = "ResetButton";
-            ResetButton.Size = new Size(111, 44);
-            ResetButton.TabIndex = 0;
-            ResetButton.Text = "Kör igen?";
-            ResetButton.UseVisualStyleBackColor = true;
-            ResetButton.Click += ResetButton_Click;
+           
             // 
             // Form1
             // 
@@ -56,7 +46,6 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveCaptionText;
             ClientSize = new Size(800, 451);
-            Controls.Add(ResetButton);
             DoubleBuffered = true;
             Name = "Form1";
             Text = "Score: 0";
@@ -69,6 +58,5 @@
 
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Timer timer2;
-        private Button ResetButton;
     }
 }
