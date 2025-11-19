@@ -44,7 +44,7 @@ namespace Maze
             {0,1,2,1,1,2,1,2,1,1,1,1,1,2,1,2,1,1,2,1,0},
             {0,1,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,2,1,0},
             {0,1,1,1,1,2,1,1,1,0,1,0,1,1,1,2,1,1,1,1,0},
-            {0,0,0,0,1,2,1,0,0,0,4,0,0,0,1,2,1,0,0,0,0},
+            {0,0,0,0,1,2,1,0,0,4,0,0,0,0,1,2,1,0,0,0,0},
             {1,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,1},
             {5,0,0,0,0,2,0,0,1,0,0,0,1,0,0,2,0,0,0,0,6},
             {1,1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1,1},
@@ -411,54 +411,30 @@ namespace Maze
         // gör så att allt går i synk med samma hastighet
         private void timer1_Tick(object sender, EventArgs e)
         {
-            // Flytta på Pacman
+            // Move Pacman first
             MoveMan();
 
             int width = maze.GetLength(xLength);
             int height = maze.GetLength(yLength);
 
-            // Gå igenom alla spöken som finns i ghosts-listan
             for (int i = 0; i < ghosts.Count; i++)
             {
-                // Spara undan spökets nuvarande position
                 int oldX = ghosts[i].X;
                 int oldY = ghosts[i].Y;
 
                 int gx = oldX;
                 int gy = oldY;
 
-                int dx = manX - gx;
-                int dy = manY - gy;
-
-                // Lokal funktion för att kontrollera om en ruta går att flytta in i
+                // helpers
+                bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < width && y < height;
                 bool IsPassable(int x, int y)
                 {
-                    if (x < 0 || y < 0 || x >= width || y >= height)
-                        return false;
+                    if (!InBounds(x, y)) return false;
                     int v = maze[y, x];
-                    // Tillåt att gå på allt utom väggar och andra spöken.
                     return v != _wall && v != _ghost;
                 }
-                List<int> candidates = new();
 
-                if (Math.Abs(dx) >= Math.Abs(dy))
-                {
-                    if (dx < 0) candidates.Add(_left); else if (dx > 0) candidates.Add(_right);
-                    if (dy < 0) candidates.Add(_up); else if (dy > 0) candidates.Add(_down);
-                }
-                else
-                {
-                    if (dy < 0) candidates.Add(_up); else if (dy > 0) candidates.Add(_down);
-                    if (dx < 0) candidates.Add(_left); else if (dx > 0) candidates.Add(_right);
-                }
-
-                // Lägg till övriga riktningar som fallback (samma ordning varje gång)
-                foreach (var d in new[] { _up, _down, _left, _right })
-                {
-                    if (!candidates.Contains(d)) candidates.Add(d);
-                }
-
-                // Flytta reverse (vändning) till sist så den bara används om inget annat fungerar
+                // reverse dir to penalize U-turns
                 int reverse = ghosts[i].Direction switch
                 {
                     _up => _down,
@@ -467,79 +443,153 @@ namespace Maze
                     _right => _left,
                     _ => _noMove
                 };
-                if (reverse != _noMove && candidates.Contains(reverse))
+
+                // candidate moves: (dir, tx, ty)
+                var candidates = new List<(int dir, int tx, int ty)>
                 {
-                    candidates.Remove(reverse);
-                    candidates.Add(reverse);
+                    (_up, gx, gy - 1),
+                    (_down, gx, gy + 1),
+                    (_left, gx - 1, gy),
+                    (_right, gx + 1, gy)
+                };
+
+                // filter viable moves (allow landing on Pacman or teleports)
+                var viable = new List<(int dir, int tx, int ty)>();
+                foreach (var c in candidates)
+                {
+                    if (!InBounds(c.tx, c.ty)) continue;
+                    int tile = maze[c.ty, c.tx];
+                    if (tile == _man || tile == _teleportLeft || tile == _teleportRight || IsPassable(c.tx, c.ty))
+                        viable.Add(c);
                 }
 
-                // Försök alla kandidatriktningar i ordning tills en passar
-                bool moved = false;
-                foreach (int dir in candidates)
-                {
-                    int tx = gx, ty = gy;
-                    if (dir == _left) tx--;
-                    else if (dir == _right) tx++;
-                    else if (dir == _up) ty--;
-                    else if (dir == _down) ty++;
+                // avoid immediate reverse when multiple choices exist
+                if (viable.Count > 1 && reverse != _noMove)
+                    viable.RemoveAll(v => v.dir == reverse);
 
-                    // Kontrollera bounds först, sedan om rutan är passabel eller har Pacman
-                    if (tx < 0 || ty < 0 || tx >= width || ty >= height) continue;
-                    int tile = maze[ty, tx];
-                    if (tile == _man || IsPassable(tx, ty))
+                // if nothing viable, allow reverse if passable
+                if (viable.Count == 0 && reverse != _noMove)
+                {
+                    (int tx, int ty) revTarget = reverse switch
                     {
-                        gx = tx;
-                        gy = ty;
-                        ghosts[i].Direction = dir;
-                        moved = true;
-                        break;
+                        _up => (gx, gy - 1),
+                        _down => (gx, gy + 1),
+                        _left => (gx - 1, gy),
+                        _right => (gx + 1, gy),
+                        _ => (gx, gy)
+                    };
+                    if (InBounds(revTarget.tx, revTarget.ty) && IsPassable(revTarget.tx, revTarget.ty))
+                        viable.Add((reverse, revTarget.tx, revTarget.ty));
+                }
+
+                // helper: compute final landing coords (consider teleports)
+                (int lx, int ly) Landing(int tx, int ty)
+                {
+                    if (!InBounds(tx, ty)) return (tx, ty);
+                    int t = maze[ty, tx];
+                    if (t == _teleportLeft) return (19, 9);
+                    if (t == _teleportRight) return (1, 9);
+                    return (tx, ty);
+                }
+
+                // direction priority for deterministic tie-break
+                var dirPriority = new Dictionary<int, int> { { _up, 0 }, { _right, 1 }, { _down, 2 }, { _left, 3 } };
+
+                bool moved = false;
+                int finalX = gx;
+                int finalY = gy;
+                int chosenDir = ghosts[i].Direction;
+
+                if (viable.Count > 0)
+                {
+                    // rank candidates deterministically:
+                    // primary = Manhattan distance to Pac-Man after landing (smaller better)
+                    // secondary = turn cost (0 = same direction, 1 = turn, 2 = reverse)
+                    // tertiary = fixed direction priority
+                    double bestScore = double.MaxValue;
+                    (int dir, int tx, int ty) best = viable[0];
+
+                    foreach (var v in viable)
+                    {
+                        var (lx, ly) = Landing(v.tx, v.ty);
+                        if (!InBounds(lx, ly)) continue;
+
+                        double dist = Math.Abs(manX - lx) + Math.Abs(manY - ly);
+
+                        int turnCost = v.dir == ghosts[i].Direction ? 0 : (v.dir == reverse ? 2 : 1);
+
+                        int pri = dirPriority.ContainsKey(v.dir) ? dirPriority[v.dir] : int.MaxValue;
+
+                        // combine into tuple-comparable value
+                        // use a high weight to keep ordering stable: (dist, turnCost, pri)
+                        double score = dist + turnCost * 0.0001 + pri * 0.0000001;
+
+                        if (score < bestScore)
+                        {
+                            bestScore = score;
+                            best = v;
+                        }
                     }
-                }
 
-                int landed = maze[gy, gx];
-                if (landed == 5)
-                {
-                    gx = 19;
-                    gy = 9;
+                    chosenDir = best.dir;
+                    finalX = best.tx;
+                    finalY = best.ty;
+                    moved = true;
                 }
-                else if (landed == 6)
-                {
-                    gx = 1;
-                    gy = 9;
-                }
-
 
                 if (!moved)
                 {
-                    // Inget valbart drag -> stanna kvar
-                    gx = oldX;
-                    gy = oldY;
+                    finalX = oldX;
+                    finalY = oldY;
+                    chosenDir = ghosts[i].Direction;
                 }
 
-                // Lägg tillbaka det som låg på spökets gamla position (så prickar återställs)
+                // map teleports to final landing cell
+                if (InBounds(finalX, finalY))
+                {
+                    int landed = maze[finalY, finalX];
+                    if (landed == _teleportLeft)
+                    {
+                        finalX = 19;
+                        finalY = 9;
+                    }
+                    else if (landed == _teleportRight)
+                    {
+                        finalX = 1;
+                        finalY = 9;
+                    }
+                }
+
+                // restore old cell
                 maze[oldY, oldX] = ghosts[i].Leave;
 
-                // Om spöket hamnar på Pacman -> Pacman dör
-                if (maze[gy, gx] == _man)
+                // avoid collisions with other ghosts
+                if (!InBounds(finalX, finalY) || maze[finalY, finalX] == _ghost)
+                {
+                    finalX = oldX;
+                    finalY = oldY;
+                }
+
+                // if landing on Pac-Man -> Pac-Man dies
+                if (InBounds(finalX, finalY) && maze[finalY, finalX] == _man)
                 {
                     manAlive = false;
-                    // Ta bort Pacman från spelplanen
                     maze[manY, manX] = _empty;
                 }
 
-                // Kom ihåg vad som låg på den position spöket hamnar på
-                ghosts[i].Leave = maze[gy, gx];
+                // remember what was at destination
+                ghosts[i].Leave = InBounds(finalX, finalY) ? maze[finalY, finalX] : _empty;
 
-                // Uppdatera spökets position
-                ghosts[i].X = gx;
-                ghosts[i].Y = gy;
+                // update ghost
+                ghosts[i].X = finalX;
+                ghosts[i].Y = finalY;
+                ghosts[i].Direction = chosenDir;
 
-                // Lägg in spöket på dess nya position
-                maze[gy, gx] = _ghost;
+                if (InBounds(finalX, finalY))
+                    maze[finalY, finalX] = _ghost;
             }
 
-            // Allt som har med spelet att göras är uppdaterat så det är
-            // dags att rita om allt
+            // redraw
             Invalidate(true);
         }
     }
