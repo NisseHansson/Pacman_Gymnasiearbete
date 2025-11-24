@@ -405,6 +405,43 @@ namespace Maze
             // Sätt ut Pacman på sin nya position
             maze[manY, manX] = _man;
         }
+        // Kolla om spöket ser Pac-Man i rak linje (ingen vägg mellan dem)
+        // Lägg denna metod i klassen Form1, utanför andra metoder.
+        private bool HasLineOfSight(int gx, int gy, int px, int py)
+        {
+            // skydda mot utanför-gränser
+            int width = maze.GetLength(xLength);
+            int height = maze.GetLength(yLength);
+            if (gx < 0 || gy < 0 || gx >= width || gy >= height) return false;
+            if (px < 0 || py < 0 || px >= width || py >= height) return false;
+
+            // samma rad
+            if (gy == py)
+            {
+                int minX = Math.Min(gx, px);
+                int maxX = Math.Max(gx, px);
+                for (int x = minX + 1; x < maxX; x++)
+                {
+                    if (maze[gy, x] == _wall) return false;
+                }
+                return true;
+            }
+
+            // samma kolumn
+            if (gx == px)
+            {
+                int minY = Math.Min(gy, py);
+                int maxY = Math.Max(gy, py);
+                for (int y = minY + 1; y < maxY; y++)
+                {
+                    if (maze[y, gx] == _wall) return false;
+                }
+                return true;
+            }
+
+            // Annars inte i linje
+            return false;
+        }
         // Denna metod körs varje gång vår timer räknat ner till 0.
         // Efter att metoden har körts, börjar timern att räkna ner på nytt
         // Allt som har med spelet att göra styrs av denna metod och
@@ -461,6 +498,24 @@ namespace Maze
                     int tile = maze[c.ty, c.tx];
                     if (tile == _man || tile == _teleportLeft || tile == _teleportRight || IsPassable(c.tx, c.ty))
                         viable.Add(c);
+                }
+
+
+                bool chaseMode = HasLineOfSight(gx, gy, manX, manY);
+
+                if (chaseMode)
+                {
+                    // Om Pacman är till vänster
+                    if (manX < gx && IsPassable(gx - 1, gy)) viable = new() { (_left, gx - 1, gy) };
+
+                    // höger
+                    else if (manX > gx && IsPassable(gx + 1, gy)) viable = new() { (_right, gx + 1, gy) };
+
+                    // upp
+                    else if (manY < gy && IsPassable(gx, gy - 1)) viable = new() { (_up, gx, gy - 1) };
+
+                    // ner
+                    else if (manY > gy && IsPassable(gx, gy + 1)) viable = new() { (_down, gx, gy + 1) };
                 }
 
                 // avoid immediate reverse when multiple choices exist
