@@ -294,6 +294,7 @@ namespace Maze
             {
                 if (e.KeyCode == Keys.R)
                 {
+                    numDots = 0;
                     score = 0;
                     this.Text = $"Score: {score}";
                     InitMaze();
